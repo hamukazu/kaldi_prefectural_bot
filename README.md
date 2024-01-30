@@ -1,0 +1,2 @@
+# kaldi_prefectural_bot
+地域別のカルディセール情報をSNSに投稿するボットです。
