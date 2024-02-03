@@ -1,0 +1,2 @@
+git+ssh://git@github.com/hamukazu/tiny_bsky.git
+Mastodon.py
