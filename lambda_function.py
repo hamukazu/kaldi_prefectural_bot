@@ -34,6 +34,19 @@ def show(d, pref, pref_en):
     return s, url_start, url_end, footer_url
 
 
+def equal(a, b):
+    c = int(a is None) + int(b is None)
+    if c == 1:
+        return False
+    elif c == 2:
+        return True
+    else:
+        sort_key = lambda x: x["shop"]
+        a_sorted = sorted(a, key=sort_key)
+        b_sorted = sorted(b, key=sort_key)
+        return a_sorted == b_sorted
+
+
 def include_now(now, strdate_from, strdate_to):
     datetime_from = datetime.fromisoformat(strdate_from + "+09:00")
     datetime_to = datetime.fromisoformat(strdate_to + "+09:00") + timedelta(hours=21)
@@ -53,18 +66,11 @@ def lambda_handler(event, context):
     store = datastore.store("pref_sale.json")
     d = json.loads(store.get())
     pref_info = d[pref]
-    pref_info2 = []
-    tz_jst = timezone(timedelta(hours=9), name="JST")
-    now = datetime.now(tz=tz_jst)
-    for x in pref_info:
-        d = x.copy()
-        d["include_now"] = include_now(now, x["date_from"], x["date_to"])
-        pref_info2.append(d)
     store2 = datastore.store(f"{pref_en}.json")
     s = store2.get()
     pref_info_prev = None if s is None else json.loads(s)
-    if pref_info2 != pref_info_prev:
-        post, url_start, url_end, url = show(pref_info2, pref, pref_en)
+    if not equal(pref_info, pref_info_prev):
+        post, url_start, url_end, url = show(pref_info, pref, pref_en)
         if dry_run:
             print(post)
         else:
@@ -99,8 +105,8 @@ def lambda_handler(event, context):
             )
             mstdn.toot(post)
         if not no_save:
-            store2.put(json.dumps(pref_info2))
+            store2.put(json.dumps(pref_info))
 
 
 if __name__ == "__main__":
-    handler(None, None)
+    lambda_handler(None, None)
