@@ -40,7 +40,7 @@ def include_now(now, strdate_from, strdate_to):
     return now >= datetime_from and now <= datetime_to
 
 
-def handler(event, context):
+def lambda_handler(event, context):
     pref = os.environ["PREF"]
     pref_en = os.environ["PREF_EN"]
     bsky_user = os.environ["BSKY_USER"]
