@@ -7,7 +7,7 @@ from tiny_bsky import Client
 from mastodon import Mastodon
 
 
-def show(d, pref, pref_en):
+def show(d, pref, pref_en, limit=300):
     header = f"{pref}カルディセール情報\n\n"
     footer_url = f"https://hamukazu.github.io/kaldi_sale_info/#{pref_en}"
     s = header
@@ -18,15 +18,20 @@ def show(d, pref, pref_en):
         s += f"{pref}のセール情報は現在ございません。"
     else:
         for x in d:
-            s += x["shop"]
-            s += "："
-            s += x["title"]
-            s += "\n"
-            s += "  "
+            ss = x["shop"]
+            ss += "："
+            ss += x["title"]
+            ss += "\n"
+            ss += "  "
             if x["include_now"]:
-                s += "【現在開催中】"
-            s += x["date"]
-            s += "\n"
+                ss += "【現在開催中】"
+            ss += x["date"]
+            ss += "\n"
+            if len(s) + len(ss) + len(footer_url) + 6 < limit:
+                s += ss
+            else:
+                s += "...他\n"
+                break
         s += "\n"
         url_start = len(s.encode("utf-8"))
         s += footer_url
@@ -70,7 +75,7 @@ def lambda_handler(event, context):
     s = store2.get()
     pref_info_prev = None if s is None else json.loads(s)
     if not equal(pref_info, pref_info_prev):
-        post, url_start, url_end, url = show(pref_info, pref, pref_en)
+        post, url_start, url_end, url = show(pref_info, pref, pref_en, 300)
         if dry_run:
             print(post)
         else:
@@ -100,6 +105,10 @@ def lambda_handler(event, context):
                 print(bsky_post)
                 print(r)
                 raise Exception(r["message"])
+        post, url_start, url_end, url = show(pref_info, pref, pref_en, 500)
+        if dry_run:
+            print(post)
+        else:
             mstdn = Mastodon(
                 access_token=mstdn_access_token, api_base_url=mstdn_api_base_url
             )
